@@ -1,10 +1,15 @@
 include(vcpkg_common_functions)
 
+if(VCPKG_LIBRARY_LINKAGE STREQUAL "dynamic")
+    message("dlib only supports static linkage")
+    set(VCPKG_LIBRARY_LINKAGE "static")
+endif()
+
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO davisking/dlib
-    REF v19.8
-    SHA512 5fbe306dab1fe025de0892808431ddc4bc6f3e91eb509881a0b341dd2d0a5a36c5d99d45ece19c428d6025b0601b996cab4b554332323a0c73a65d66b82db01a
+    REF v19.16
+    SHA512 4e040ef88acff05e1a48e499b813c876b22ad3f989d076bdf19969d01036b62e51a0dff30b70046910ba31dfa1b1c2450a7fad41ae3142b7285ed74b8d584887
     HEAD_REF master
 )
 
@@ -16,11 +21,6 @@ file(REMOVE_RECURSE ${SOURCE_PATH}/dlib/external/zlib)
 file(READ "${SOURCE_PATH}/dlib/CMakeLists.txt" DLIB_CMAKE)
 string(REPLACE "PNG_LIBRARY" "PNG_LIBRARIES" DLIB_CMAKE "${DLIB_CMAKE}")
 file(WRITE "${SOURCE_PATH}/dlib/CMakeLists.txt" "${DLIB_CMAKE}")
-
-set(WITH_BLAS OFF)
-if("blas" IN_LIST FEATURES)
-  set(WITH_BLAS ON)
-endif()
 
 set(WITH_CUDA OFF)
 if("cuda" IN_LIST FEATURES)
@@ -35,8 +35,8 @@ vcpkg_configure_cmake(
         -DDLIB_USE_FFTW=ON
         -DDLIB_PNG_SUPPORT=ON
         -DDLIB_JPEG_SUPPORT=ON
-        -DDLIB_USE_BLAS=${WITH_BLAS}
-        -DDLIB_USE_LAPACK=OFF
+        -DDLIB_USE_BLAS=ON
+        -DDLIB_USE_LAPACK=ON
         -DDLIB_USE_CUDA=${WITH_CUDA}
         -DDLIB_GIF_SUPPORT=OFF
         -DDLIB_USE_MKL_FFT=OFF
@@ -62,13 +62,15 @@ file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/include/dlib/cmake_utils/test_for_ne
 file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/include/dlib/cmake_utils/test_for_cudnn)
 file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/include/dlib/cmake_utils/test_for_cuda)
 file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/include/dlib/cmake_utils/test_for_cpp11)
+file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/include/dlib/cmake_utils/test_for_avx)
+file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/include/dlib/cmake_utils/test_for_sse4)
 file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/include/dlib/external/libpng/arm)
 
 # Dlib encodes debug/release in its config.h. Patch it to respond to the NDEBUG macro instead.
 file(READ ${CURRENT_PACKAGES_DIR}/include/dlib/config.h _contents)
-string(REPLACE "/* #undef ENABLE_ASSERTS */" "#if !defined(NDEBUG)\n#define ENABLE_ASSERTS\n#endif" _contents ${_contents})
-string(REPLACE "#define DLIB_DISABLE_ASSERTS" "#if defined(NDEBUG)\n#define DLIB_DISABLE_ASSERTS\n#endif" _contents ${_contents})
-file(WRITE ${CURRENT_PACKAGES_DIR}/include/dlib/config.h ${_contents})
+string(REPLACE "/* #undef ENABLE_ASSERTS */" "#if defined(_DEBUG)\n#define ENABLE_ASSERTS\n#endif" _contents ${_contents})
+string(REPLACE "#define DLIB_DISABLE_ASSERTS" "#if !defined(_DEBUG)\n#define DLIB_DISABLE_ASSERTS\n#endif" _contents ${_contents})
+file(WRITE ${CURRENT_PACKAGES_DIR}/include/dlib/config.h "${_contents}")
 
 file(READ ${CURRENT_PACKAGES_DIR}/share/dlib/dlib.cmake _contents)
 string(REPLACE

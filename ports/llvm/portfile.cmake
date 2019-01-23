@@ -7,13 +7,24 @@ if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "WindowsStore")
 endif()
 
 include(vcpkg_common_functions)
-set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/llvm-5.0.0.src)
+set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/llvm-7.0.0.src)
 vcpkg_download_distfile(ARCHIVE
-    URLS "http://releases.llvm.org/5.0.0/llvm-5.0.0.src.tar.xz"
-    FILENAME "llvm-5.0.0.src.tar.xz"
-    SHA512 e6d8fdcb5bf27bded814d02f39f69c6171bc3a512d5957c03e5ac2e231f903b7de87634b059bd5c5da670f7c3a8f7a538f6299225799f15f921857f1452f6b3a
+    URLS "http://releases.llvm.org/7.0.0/llvm-7.0.0.src.tar.xz"
+    FILENAME "llvm-7.0.0.src.tar.xz"
+    SHA512 bdc9b851c158b17e1bbeb7ac5ae49821bfb1251a3826fe8a3932cd1a43f9fb0d620c3de67150c1d9297bf0b86fa917e75978da29c3f751b277866dc90395abec
 )
 vcpkg_extract_source_archive(${ARCHIVE})
+
+vcpkg_download_distfile(CLANG_ARCHIVE
+    URLS "http://releases.llvm.org/7.0.0/cfe-7.0.0.src.tar.xz"
+    FILENAME "cfe-7.0.0.src.tar.xz"
+    SHA512 17a658032a0160c57d4dc23cb45a1516a897e0e2ba4ebff29472e471feca04c5b68cff351cdf231b42aab0cff587b84fe11b921d1ca7194a90e6485913d62cb7
+)
+vcpkg_extract_source_archive(${CLANG_ARCHIVE} ${SOURCE_PATH}/tools)
+
+if(NOT EXISTS ${SOURCE_PATH}/tools/clang)
+  file(RENAME ${SOURCE_PATH}/tools/cfe-7.0.0.src ${SOURCE_PATH}/tools/clang)
+endif()
 
 vcpkg_apply_patches(
     SOURCE_PATH ${SOURCE_PATH}
@@ -29,7 +40,7 @@ vcpkg_configure_cmake(
     PREFER_NINJA
     OPTIONS
         -DLLVM_TARGETS_TO_BUILD=X86
-        -DLLVM_INCLUDE_TOOLS=OFF
+        -DLLVM_INCLUDE_TOOLS=ON
         -DLLVM_INCLUDE_UTILS=OFF
         -DLLVM_INCLUDE_EXAMPLES=OFF
         -DLLVM_INCLUDE_TESTS=OFF
@@ -39,6 +50,19 @@ vcpkg_configure_cmake(
 
 vcpkg_install_cmake()
 
+if(NOT DEFINED VCPKG_BUILD_TYPE OR VCPKG_BUILD_TYPE STREQUAL "release")
+    file(GLOB EXE ${CURRENT_PACKAGES_DIR}/bin/*)
+    file(COPY ${EXE} DESTINATION ${CURRENT_PACKAGES_DIR}/tools/llvm)
+    file(REMOVE ${EXE})
+endif()
+
+if(NOT DEFINED VCPKG_BUILD_TYPE OR VCPKG_BUILD_TYPE STREQUAL "debug")
+    file(GLOB DEBUG_EXE ${CURRENT_PACKAGES_DIR}/debug/bin/*)
+    file(COPY ${DEBUG_EXE} DESTINATION ${CURRENT_PACKAGES_DIR}/debug/tools/llvm)
+    file(REMOVE ${DEBUG_EXE})
+endif()
+
+vcpkg_fixup_cmake_targets(CONFIG_PATH lib/cmake/clang TARGET_PATH share/clang)
 vcpkg_fixup_cmake_targets(CONFIG_PATH share/llvm)
 vcpkg_copy_tool_dependencies(${CURRENT_PACKAGES_DIR}/tools/llvm)
 
@@ -46,6 +70,12 @@ file(REMOVE_RECURSE
     ${CURRENT_PACKAGES_DIR}/debug/include
     ${CURRENT_PACKAGES_DIR}/debug/tools
     ${CURRENT_PACKAGES_DIR}/debug/share
+    ${CURRENT_PACKAGES_DIR}/debug/bin
+    ${CURRENT_PACKAGES_DIR}/debug/msbuild-bin
+    ${CURRENT_PACKAGES_DIR}/bin
+    ${CURRENT_PACKAGES_DIR}/msbuild-bin
+    ${CURRENT_PACKAGES_DIR}/tools/msbuild-bin
+    ${CURRENT_PACKAGES_DIR}/include/llvm/BinaryFormat/WasmRelocs
 )
 
 # Remove one empty include subdirectory if it is indeed empty

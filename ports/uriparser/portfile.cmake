@@ -1,12 +1,12 @@
-
 include(vcpkg_common_functions)
-set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/uriparser-0.8.4)
-vcpkg_download_distfile(ARCHIVE
-    URLS "https://sourceforge.net/projects/uriparser/files/Sources/0.8.4/uriparser-0.8.4.zip/download"
-    FILENAME "uriparser-0.8.4.zip"
-    SHA512 c22a98a027c4caa1d3559b1d3112f7ac567a489037d2b38f1999483f623a2e8d79fbacdc8859fe4e669a12f0f55935179f7be2f4424c61e51d1d68f6ced37185
+
+vcpkg_from_github(
+    OUT_SOURCE_PATH SOURCE_PATH
+    REPO uriparser/uriparser
+    REF uriparser-0.9.1
+    SHA512 5a553bc503b345bd81ad8bcfa25ab1e0f0ea0a0446a0c4beba9129d128d24de418efd10f04f8814b4f8864f6e219b5b9b938934edea76e78c0235428e5062636
+    HEAD_REF master
 )
-vcpkg_extract_source_archive(${ARCHIVE})
 
 file(COPY ${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt DESTINATION ${SOURCE_PATH})
 

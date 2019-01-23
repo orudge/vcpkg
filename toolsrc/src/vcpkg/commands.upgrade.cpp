@@ -1,8 +1,8 @@
 #include "pch.h"
 
-#include <vcpkg/base/util.h>
 #include <vcpkg/commands.h>
 #include <vcpkg/dependencies.h>
+#include <vcpkg/globalstate.h>
 #include <vcpkg/help.h>
 #include <vcpkg/input.h>
 #include <vcpkg/install.h>
@@ -10,15 +10,17 @@
 #include <vcpkg/update.h>
 #include <vcpkg/vcpkglib.h>
 
+#include <vcpkg/base/util.h>
+
 namespace vcpkg::Commands::Upgrade
 {
     using Install::KeepGoing;
     using Install::to_keep_going;
 
-    static const std::string OPTION_NO_DRY_RUN = "--no-dry-run";
-    static const std::string OPTION_KEEP_GOING = "--keep-going";
+    static constexpr StringLiteral OPTION_NO_DRY_RUN = "--no-dry-run";
+    static constexpr StringLiteral OPTION_KEEP_GOING = "--keep-going";
 
-    static const std::array<CommandSwitch, 2> INSTALL_SWITCHES = {{
+    static constexpr std::array<CommandSwitch, 2> INSTALL_SWITCHES = {{
         {OPTION_NO_DRY_RUN, "Actually upgrade"},
         {OPTION_KEEP_GOING, "Continue installing packages on failure"},
     }};
@@ -145,6 +147,10 @@ namespace vcpkg::Commands::Upgrade
             Build::UseHeadVersion::NO,
             Build::AllowDownloads::YES,
             Build::CleanBuildtrees::NO,
+            Build::CleanPackages::NO,
+            Build::DownloadTool::BUILT_IN,
+            GlobalState::g_binary_caching ? Build::BinaryCaching::YES : Build::BinaryCaching::NO,
+            Build::FailOnTombstone::NO,
         };
 
         // Set build settings for all install actions
