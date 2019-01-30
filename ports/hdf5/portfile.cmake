@@ -60,4 +60,4 @@ vcpkg_fixup_cmake_targets(CONFIG_PATH share/hdf5)
 file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/share)
 file(REMOVE_RECURSE ${CURRENT_PACKAGES_DIR}/debug/include)
 
-vcpkg_test_cmake(PACKAGE_NAME HDF5)
+vcpkg_test_cmake(PACKAGE_NAME hdf5)
