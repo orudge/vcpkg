@@ -62,6 +62,12 @@ function(vcpkg_configure_cmake)
         set(_csc_HOST_ARCHITECTURE $ENV{PROCESSOR_ARCHITECTURE})
     endif()
 
+    if(CMAKE_HOST_WIN32)
+        set(_PATHSEP ";")
+    else()
+        set(_PATHSEP ":")
+    endif()
+
     set(NINJA_CAN_BE_USED ON) # Ninja as generator
     set(NINJA_HOST ON) # Ninja as parallel configurator
     if(_csc_HOST_ARCHITECTURE STREQUAL "x86")
@@ -70,9 +76,6 @@ function(vcpkg_configure_cmake)
         set(NINJA_HOST OFF)
     elseif(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "WindowsStore")
         # Ninja and MSBuild have many differences when targetting UWP, so use MSBuild to maximize existing compatibility
-        set(NINJA_CAN_BE_USED OFF)
-    elseif(VCPKG_TARGET_ARCHITECTURE STREQUAL "arm64" OR VCPKG_TARGET_ARCHITECTURE STREQUAL "arm")
-        # Arm64 usage should be allowed once github issue #2375 is resolved
         set(NINJA_CAN_BE_USED OFF)
     endif()
 
@@ -114,7 +117,7 @@ function(vcpkg_configure_cmake)
     if(GENERATOR STREQUAL "Ninja")
         vcpkg_find_acquire_program(NINJA)
         get_filename_component(NINJA_PATH ${NINJA} DIRECTORY)
-        set(ENV{PATH} "$ENV{PATH};${NINJA_PATH}")
+        set(ENV{PATH} "$ENV{PATH}${_PATHSEP}${NINJA_PATH}")
         list(APPEND _csc_OPTIONS "-DCMAKE_MAKE_PROGRAM=${NINJA}")
     endif()
 
@@ -164,6 +167,8 @@ function(vcpkg_configure_cmake)
         list(APPEND _csc_OPTIONS "-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=${VCPKG_ROOT_DIR}/scripts/toolchains/android.cmake")
     elseif(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "Darwin")
         list(APPEND _csc_OPTIONS "-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=${VCPKG_ROOT_DIR}/scripts/toolchains/osx.cmake")
+    elseif(VCPKG_CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+        list(APPEND _csc_OPTIONS "-DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=${VCPKG_ROOT_DIR}/scripts/toolchains/freebsd.cmake")
     endif()
 
     list(APPEND _csc_OPTIONS
@@ -195,6 +200,17 @@ function(vcpkg_configure_cmake)
         )
     endif()
 
+    # Sets configuration variables for macOS builds
+    if(DEFINED VCPKG_INSTALL_NAME_DIR)
+        list(APPEND _csc_OPTIONS "-DCMAKE_INSTALL_NAME_DIR=${VCPKG_INSTALL_NAME_DIR}")
+    endif()
+    if(DEFINED VCPKG_OSX_DEPLOYMENT_TARGET)
+        list(APPEND _csc_OPTIONS "-DCMAKE_OSX_DEPLOYMENT_TARGET=${VCPKG_OSX_DEPLOYMENT_TARGET}")
+    endif()
+    if(DEFINED VCPKG_OSX_SYSROOT)
+        list(APPEND _csc_OPTIONS "-DCMAKE_OSX_SYSROOT=${VCPKG_OSX_SYSROOT}")
+    endif()
+
     set(rel_command
         ${CMAKE_COMMAND} ${_csc_SOURCE_PATH} "${_csc_OPTIONS}" "${_csc_OPTIONS_RELEASE}"
         -G ${GENERATOR}
@@ -210,7 +226,7 @@ function(vcpkg_configure_cmake)
 
         vcpkg_find_acquire_program(NINJA)
         get_filename_component(NINJA_PATH ${NINJA} DIRECTORY)
-        set(ENV{PATH} "$ENV{PATH};${NINJA_PATH}")
+        set(ENV{PATH} "$ENV{PATH}${_PATHSEP}${NINJA_PATH}")
 
         #parallelize the configure step
         set(_contents
