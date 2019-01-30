@@ -9,7 +9,6 @@ vcpkg_from_github(
     PATCHES
         "${CMAKE_CURRENT_LIST_DIR}/vs-version-detection.patch"
         "${CMAKE_CURRENT_LIST_DIR}/use-uriparser.patch"
-        "${CMAKE_CURRENT_LIST_DIR}/fix-virtual-method.patch"
 )
 
 vcpkg_configure_cmake(
