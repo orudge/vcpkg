@@ -1,0 +1,12 @@
+diff --git a/third-party/libusb/CMakeLists.txt b/third-party/libusb/CMakeLists.txt
+index 80f942cd..af6b1616 100644
+--- a/third-party/libusb/CMakeLists.txt
++++ b/third-party/libusb/CMakeLists.txt
+@@ -69,6 +69,7 @@ if(WIN32)
+             string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+         endif(${flag_var} MATCHES "/MD")
+     endforeach(flag_var)
++    add_definitions("/source-charset:utf-8")
+ endif()
+ 
+ if(ANDROID)
