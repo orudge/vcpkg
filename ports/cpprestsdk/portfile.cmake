@@ -4,6 +4,8 @@ vcpkg_from_github(
     REF v2.10.16
     SHA512 d850b26051439dd10edcecd006075c64c61c565193cd76870af175bd343a72ecc59485deb0f907807071a57dd256b67139ad5d016f19cb38f7142357f430be1c
     HEAD_REF master
+    PATCHES
+      no-pkgconfig.patch
 )
 
 set(OPTIONS)

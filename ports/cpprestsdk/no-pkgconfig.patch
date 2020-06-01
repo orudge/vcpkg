@@ -1,0 +1,26 @@
+From 6bb94fad475af16771165472b3b522759441a45c Mon Sep 17 00:00:00 2001
+From: Owen Rudge <owen@owenrudge.net>
+Date: Mon, 1 Jun 2020 10:16:50 +0100
+Subject: [PATCH] Don't use pkg-config to detect OpenSSL if the vcpkg toolchain
+ is detected
+
+---
+ Release/cmake/cpprest_find_openssl.cmake | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Release/cmake/cpprest_find_openssl.cmake b/Release/cmake/cpprest_find_openssl.cmake
+index 93336636..540ffd1e 100644
+--- a/Release/cmake/cpprest_find_openssl.cmake
++++ b/Release/cmake/cpprest_find_openssl.cmake
+@@ -43,7 +43,7 @@ function(cpprest_find_openssl)
+       message(STATUS "OPENSSL_ROOT_DIR = ${OPENSSL_ROOT_DIR}")
+       set(_OPENSSL_VERSION "")
+     endif()
+-    if(UNIX)
++    if(UNIX AND NOT DEFINED VCPKG_TOOLCHAIN)
+       find_package(PkgConfig)
+       pkg_search_module(OPENSSL openssl)
+     endif()
+-- 
+2.25.1.windows.1
+
