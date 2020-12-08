@@ -30,6 +30,10 @@ if ("apng" IN_LIST FEATURES)
     set(LIBPNG_APNG_OPTION "-DPNG_PREFIX=a")
 endif()
 
+if(VCPKG_CMAKE_SYSTEM_NAME STREQUAL Darwin)
+    set(MACOS_EXTRA_PATCH macos-arch-fix.patch)
+endif()
+
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO glennrp/libpng
@@ -43,6 +47,7 @@ vcpkg_from_github(
         pkgconfig.2.patch
         ${APNG_EXTRA_PATCH}
         fix-export-targets.patch
+        ${MACOS_EXTRA_PATCH}
 )
 
 if(VCPKG_LIBRARY_LINKAGE STREQUAL dynamic)
